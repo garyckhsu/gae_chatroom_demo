@@ -1,0 +1,90 @@
+<html>
+<head>
+<script type='text/javascript'
+	src='http://demo.gaechatroom.appspot.com/_ah/channel/jsapi'>
+	
+</script>
+</head>
+<body>
+	<p>Chat Room demo with google app engile channel API</p>
+
+	<textarea id='messageArea'
+		style="margin-bottom: 4px; width: 250px; height: 20px">
+</textarea>
+	<br />
+
+	<button id='send'>Send</button>
+	<br />
+
+	<form name>
+
+		<ol id="messageView" style="list-style-type: none"></ol>
+
+	</form>
+	<br />
+
+	<script>
+		document.getElementById('send').addEventListener(
+				'click',
+				function() {
+					var str = document.getElementById('messageArea').value;
+					if (room != null) {
+						xhrChat.open('POST',
+								'http://demo.gaechatroom.appspot.com/MyServlet/?room='
+										+ room, true);
+						xhrChat.send(str);
+					}
+				}, false)
+		var room = prompt('Please enter a room number to join', '');
+		var xhrChannel = new XMLHttpRequest();
+		var xhrChat = new XMLHttpRequest();
+		var token;
+		function getToken() {
+			if (xhrChannel.readyState == 4) {
+				token = xhrChannel.responseText;
+				token = token.trim();
+				console.log("getToken=" + token);
+				openChannel();
+			}
+		}
+		if (room != null) {
+			xhrChannel.open('GET',
+					'http://demo.gaechatroom.appspot.com/MyServlet/?room=' + room,
+					true);
+			xhrChannel.send();
+			xhrChannel.onreadystatechange = getToken;
+		}
+		onOpened = function() {
+			alert('chat room open success');
+		};
+
+		onMessage = function(msg) {
+			var list = document.getElementById('messageView'); 
+            var entry = document.createElement('li');
+            entry.appendChild(document.createTextNode(msg.data));
+            list.appendChild(entry);
+			console.log("onMessage msg.data=" + msg.data);
+		};
+
+		openChannel = function() {
+			console.log("openChannel token=" + token);
+			var channel = new goog.appengine.Channel(token);
+			var handler = {
+				'onopen' : onOpened,
+				'onmessage' : onMessage,
+				'onerror' : function(err) {
+					console.log("channel error " + err.description);
+				},
+				'onclose' : function() {
+					console.log("socket onclose");
+				}
+			};
+			var socket = channel.open(handler);
+			socket.onopen = onOpened;
+			socket.onmessage = onMessage;
+		};
+	</script>
+
+</body>
+</html>
+
